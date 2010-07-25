@@ -1,0 +1,44 @@
+h1. About 
+
+This is experimental proxy server in node.js. It does two basic things:
+* serves as a proxy between browser and your web server as well as CouchDB,
+* WebSockets for fast master-slave replication with CouchDB.
+
+h1. Why?
+
+* browsers, for security reasons, don't allow cross-domain ajax request, required for full CouchDB support,
+* optimized load and speed for master-to-many-slaves
+
+h1. Demo
+
+Run CouchDB server:
+
+  $ couchdb
+  Apache CouchDB 1.0.0 (LogLevel=info) is starting.
+  Apache CouchDB has started. Time to relax.
+  [info] [<0.33.0>] Apache CouchDB has started on http://127.0.0.1:5984/
+
+Run your web server:
+
+  $ cd ./html/
+  $ thin -A file start
+  >> Using file adapter
+  >> Thin web server (v1.2.7 codename No Hup)
+  >> Maximum connections set to 1024
+  >> Listening on 0.0.0.0:3000, CTRL+C to stop
+
+Run our proxy server (it may require root):
+
+  $ node server.js
+  25 Jul 21:03:34 - socket.io ready - accepting connections
+
+Open browser which supports WebSockets and go to: http://127.0.0.1:8080/console.html
+This is console. You can do basic CRUD request to your DB. For example select @PUT@ and enter: @/@. It will create new database "browsercouch" (which is default name. You can change it in @./server.js@ file).
+
+Refresh page and open another browser window and go to the same console page. Then choose @POST@ and type @/ {"hello": "world"}@. This will save new document in database. Notice how fast this update appeared in the other browser window.
+
+h1. Future
+
+* Replace BrowserCouch's Ajax replications with WebSockets,
+* pass specs,
+* make similar console for comuniaction with BrowserCouch.
