@@ -560,7 +560,7 @@ function BrowserCouch(name){
   this.open = function(docId, options) {
     var doc = storage.get(docPrefix + docId)
     // TODO
-    if(options.revs_info) doc._revs_info = [{}]
+    if(options && options.revs_info) doc._revs_info = [{}]
 
     if (doc && !doc._deleted) return doc
     else return null
@@ -589,9 +589,9 @@ function BrowserCouch(name){
       var orig = storage.get(docPrefix + obj._id)
 
       if(newEdits && orig && orig._rev != obj._rev){
-        console.log('original: ' + stringify(orig));
-        console.log('new: ' + stringify(obj));
-        throw new Error('Document update conflict.');
+//        console.log('original: ' + stringify(orig))
+//        console.log('new: ' + stringify(obj))
+        throw {error: "conflict", reason: "Document update conflict."}
       } else {
         function newHash(){
           return (Math.random()*Math.pow(10,20));
@@ -793,47 +793,50 @@ function BrowserCouch(name){
 //            options.finished(new BrowserCouch._MapView(mapResult));
 //        });
 //    };
-//
-//    self.getChanges = function(cb, since){
-//      since = since || 0;
-//      var changes = [];
-//      var curSeq = since + 1;
-//      var lastSeq;
-//      var stop = false;
-//      while(!stop){
-//        storage.get(seqPrefix + curSeq, function(docId){
-//          if (!docId){
-//            stop = true;
-//            lastSeq = curSeq - 1;
-//          }else
-//            storage.get(docPrefix + docId, function(doc){
-//              if (!doc){
-//                throw new Error('Doc not found: ' + curSeq + ', ' + docId)
-//              }
-//              var change = {seq: curSeq, id: docId, changes: [{rev: doc._rev}]};
-//              if (doc._deleted)
-//                change.deleted = doc._deleted;
-//              changes.push(change);
-//            })
-//        })
-//        curSeq++;
-//      }
-//      // remove dups
-//      var docIds = {}; // simulate a set
-//      var _changes = [];
-//      for (var i = changes.length - 1; i >= 0; i--){
-//        var change = changes[i];
-//        if (change.id in docIds) continue;
-//        docIds[change.id] = true
-//        _changes.push(change);
-//      }
-//
-//      cb({
-//        results: _changes,
-//        last_seq: lastSeq
-//      });
-//    }
-//
+
+    this.changes = function(options){
+      options = options || {}
+      var since = options.since || 0
+      var changes = []
+      var curSeq = since + 1
+      var lastSeq
+      var stop = false
+
+      while(!stop){
+        var docId = storage.get(seqPrefix + curSeq)
+
+        if (!docId){
+          stop = true
+          lastSeq = curSeq - 1
+        } else {
+          var doc = storage.get(docPrefix + docId)
+          if (!doc){
+            throw new Error('Doc not found: ' + curSeq + ', ' + docId)
+          }
+          var change = {seq: curSeq, id: docId, changes: [{rev: doc._rev}]}
+          if(doc._deleted) {
+            change.deleted = doc._deleted }
+          changes.push(change)
+        }
+        curSeq++
+      }
+
+      // remove dups
+      var docIds = {} // simulate a set
+      var _changes = []
+      for(var i = changes.length - 1; i >= 0; i--) {
+        var change = changes[i]
+        if (change.id in docIds) continue
+        docIds[change.id] = true
+        _changes.push(change)
+      }
+
+      return({
+        results: _changes,
+        last_seq: lastSeq
+      })
+    }
+
 //    self.createBulkDocs = function BC_createBulkDocs(changes){
 //      var docs;
 //      var ret = {

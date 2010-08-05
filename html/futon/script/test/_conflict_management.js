@@ -1,12 +1,14 @@
-describe('BrowserCouch conflict management')
-  .before(function(){
-    localStorage.clear()
-    this.db1 = BrowserCouch('db1')
-    this.db1.put({_id: '1', name: 'Emma'})
-    this.db2 = BrowserCouch('db2')
-    this.db1.syncToLocal(this.db2)
-  })
-  .should('store conflicted versions to _conflicts if conflict', function(){
+//'BrowserCouch conflict management'
+
+couchTests._conflict_management = function(debug) {
+//  .before(function(){
+//    localStorage.clear()
+    db1 = BrowserCouch('db1')
+    db1.put({_id: '1', name: 'Emma'})
+    db2 = BrowserCouch('db2')
+    db1.syncToLocal(this.db2)
+//  })
+//  .should('store conflicted versions to _conflicts if conflict', function(){
     var self = this
     self.db1.get('1', function(doc){
       doc.name = 'Ben'
@@ -23,8 +25,8 @@ describe('BrowserCouch conflict management')
         })
       })
     })
-  })
-  .should('pick one with more edits as winner', function(){
+//  })
+//  .should('pick one with more edits as winner', function(){
     var self = this
     self.db1.get('1', function(doc){
       doc.name = 'Ben'
@@ -45,8 +47,8 @@ describe('BrowserCouch conflict management')
         })
       })
     })
-  })
-  .should('be able to get conflicted versions', function(){
+//  })
+//  .should('be able to get conflicted versions', function(){
     var self = this
     self.db1.get('1', function(doc){
       doc.name = 'Ben'
@@ -67,4 +69,5 @@ describe('BrowserCouch conflict management')
         })
       })
     })
-  })
+//  })
+}

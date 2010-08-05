@@ -27,6 +27,17 @@ var couchTests = {};
 function loadTest(file) {
   loadScript("script/test/"+file);
 };
+
+// original browsercouch tests
+loadTest("_basic.js");
+loadTest("_conflict_management.js");
+//loadTest("_replication_down.js");
+//loadTest("_replication_local.js");
+//loadTest("_replication_up.js");
+loadTest("_restart.js");
+loadTest("_rev_and_changes.js");
+//loadTest("_sync_api.js");
+
 // keep first
 loadTest("basics.js");
 
