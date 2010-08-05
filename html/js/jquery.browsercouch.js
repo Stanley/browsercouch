@@ -54,7 +54,7 @@
     },
 
     allDbs: function(options) {
-      options.success([]);
+      options.success(BrowserCouch.allDbs())
     },
 
     config: function(options, section, option, value) {
@@ -80,20 +80,39 @@
     },
     
     session: function(options) {
-      options = options || {};
-      $.ajax({
-        type: "GET", url: this.urlPrefix + "/_session",
-        complete: function(req) {
-          var resp = $.httpData(req, "json");
-          if (req.status == 200) {
-            if (options.success) options.success(resp);
-          } else if (options.error) {
-            options.error(req.status, resp.error, resp.reason);
-          } else {
-            alert("An error occurred getting session info: " + resp.reason);
-          }
+//      options = options || {};
+//      $.ajax({
+//        type: "GET", url: this.urlPrefix + "/_session",
+//        complete: function(req) {
+//          var resp = $.httpData(req, "json");
+//          if (req.status == 200) {
+//            if (options.success) options.success(resp);
+//          } else if (options.error) {
+//            options.error(req.status, resp.error, resp.reason);
+//          } else {
+//            alert("An error occurred getting session info: " + resp.reason);
+//          }
+//        }
+//      });
+
+      options.success({
+        ok: true,
+        userCtx: {
+          name: null,
+          roles: [
+            "_admin"
+          ]
+        },
+        info: {
+          authentication_db: "_users",
+          authentication_handlers: [
+            "oauth",
+            "cookie",
+            "default"
+          ],
+        authenticated: "default"
         }
-      });
+      })
     },
 
     userDb : function(callback) {
@@ -150,6 +169,7 @@
     },
 
     db: function(name) {
+      var browsercouch = new BrowserCouch(name)
       return {
         name: name,
         uri: this.urlPrefix + "/" + encodeURIComponent(name) + "/",
@@ -202,15 +222,27 @@
           );
         },
         info: function(options) {
-          ajax(
-            {url: this.uri},
+          fake_ajax(
+            function(cb){
+              cb({
+                db_name: name,
+                doc_count: browsercouch.docCount(),
+                doc_del_count: 0,
+                update_seq: 0,
+                purge_seq: 0,
+                compact_running: false,
+                disk_size: 0,
+                instance_start_time: "1280597411120486",
+                disk_format_version: 0
+              })
+            },
             options,
             "Database information could not be retrieved"
           );
         },
         allDocs: function(options) {
-          ajax(
-            {url: this.uri + "_all_docs" + encodeOptions(options)},
+          fake_ajax(
+            browsercouch.allDocs,
             options,
             "An error occurred retrieving a list of all documents"
           );
@@ -247,11 +279,17 @@
           }
         },
         openDoc: function(docId, options, ajaxOptions) {
-          ajax({url: this.uri + encodeDocId(docId) + encodeOptions(options)},
+//          ajax({url: this.uri + encodeDocId(docId) + encodeOptions(options)},
+//            options,
+//            "The document could not be retrieved"
+//          );
+          fake_ajax(
+            function(cb){
+              browsercouch.get(docId, cb)
+            },
             options,
-            "The document could not be retrieved",
-            ajaxOptions
-          );
+            "The document could not be retrieved"
+          )
         },
         saveDoc: function(doc, options) {
           options = options || {};
@@ -393,8 +431,14 @@
     encodeDocId: encodeDocId, 
 
     info: function(options) {
-      ajax(
-        {url: this.urlPrefix + "/"},
+      fake_ajax(
+//        {url: this.urlPrefix + "/"},
+        function(cb){
+          cb({
+            browsercouch: "Welcome",
+            version: "0.0.1"
+          })
+        },
         options,
         "Server information could not be retrieved"
       );
@@ -446,6 +490,33 @@
         }
       }
     }, obj), ajaxOptions));
+  }
+
+  function fake_ajax(handler, options, errorMessage) {
+    options = $.extend({successStatus: 200}, options);
+    errorMessage = errorMessage || "Unknown error";
+
+//    funct(options, function(resp){
+//      console.log(resp)
+//      options.success(resp)
+//    })
+
+    handler(options.success)
+
+
+//    $.ajax($.extend($.extend({
+//      type: "GET", dataType: "json",
+//      complete: function(req) {
+//        var resp = $.httpData(req, "json");
+//        if (req.status == options.successStatus) {
+//          if (options.success) options.success(resp);
+//        } else if (options.error) {
+//          options.error(req.status, resp.error, resp.reason);
+//        } else {
+//          alert(errorMessage + ": " + resp.reason);
+//        }
+//      }
+//    }, obj), ajaxOptions));
   }
 
   // Convert a options object to an url query string.

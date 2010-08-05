@@ -108,7 +108,7 @@ function runTest(button, callback, debug, noSave) {
     updateTestsFooter();
     currentRow = null;
     if (callback) callback();
-    if (!noSave) saveTestReport();
+//    if (!noSave) saveTestReport();
   }
   $("td.status", row).addClass("running").text("running…");
   setTimeout(run, 100);
