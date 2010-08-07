@@ -69,8 +69,8 @@ var BrowserCouch = function(opts){
       else{
           this.name = options.name
           this.host = options.host || 'localhost'
-          this.port = options.port || 5984
-          this.baseUrl = 'http://' + this.host + ':' + this.port + '/' + this.name + '/'
+          this.port = options.port || 8080
+          this.baseUrl = 'http://' + this.host + ':' + this.port + '/_db/' + this.name + '/'
       }
   }
   Couch.prototype = {
@@ -127,7 +127,7 @@ var BrowserCouch = function(opts){
           var xhr = new XMLHttpRequest()
           xhr.onreadystatechange = callback ? _callback : null
           var url = this.baseUrl + uri
-          //console.log(verb + ': ' + url)
+          console.log(verb + ': ' + url)
           xhr.open(verb, url, true)
           xhr.send(data)
       }

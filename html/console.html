@@ -2,29 +2,7 @@
 <html>
   <head>
     <title>CouchDB console demo</title>
-    
-    <style>
-      a{text-decoration:none; color: inherit}
-      a:hover{text-decoration:underline}
-      #console { margin: 20px }
-      #chat { overflow: auto; width: 100%; border: 1px solid #eee; height: 500px}
-      #chat pre { padding: 8px; margin: 0; white-space: nowrap}
-      #chat pre i {color: gray}
-      #chat pre:nth-child(odd) { background: #F6F6F6; }
-      #form { background: #333; padding: 5px 10px 5px 80px; position: relative}
-      #form input[type=text] { width: 100%; height:30px; background: #fff; border: 1px solid #fff; font-family: monospace; font-size:20px; padding: 0}
-      #form input[type=submit] { position:absolute; right:15px; top:6px; cursor: pointer; background: #999; border: none; -moz-border-radius: 8px; -webkit-border-radius: 8px; text-shadow: 1px 1px 0 #000; color: #fff; width: 81px; height: 30px}
-      #form input[type=submit]:hover { background: #A2A2A2; }
-      #form input[type=submit]:active { color: #000; text-shadow: 1px 1px 0 #fff; }
-      span.gray { color: gray }
-      #form select{
-        height:32px;
-        left:5px;
-        position:absolute;
-        top:5px;
-        width:70px;
-      }
-    </style>        
+    <link rel="stylesheet" type="text/css" media="all" href="css/console.css" />
   </head>
   <body>    
     <div id="console">
@@ -42,48 +20,42 @@
       </form>
     </div>
     
-    <script src="/js/socket.io.js"></script>
-    <script src="/js/ext/jquery.js"></script>
+    <script src="js/socket.io.js"></script>
+    <script src="js/ext/jquery.js"></script>
     <script>
       var j = JSON.stringify
-      var loading = true
-      io.setPath('/js/')
-    
+      io.setPath('js/')
+
       function pushMessage(element){
-      
-        if(loading){
-          document.getElementById('chat').innerHTML = ''
-          loading = false
-        }
-        
+
         var el = document.createElement('pre')
         var now = new Date()
-        
+
         function _0(n){return n<10 ? '0'+n : n}
         el.innerHTML = "<i>"+ now.getHours() +":"+ _0(now.getMinutes()) +":"+ _0(now.getSeconds()) +"."+ now.getMilliseconds() +"</i> "
         el.appendChild(element)
-        
+
         document.getElementById('chat').appendChild(el)
         document.getElementById('chat').scrollTop = 1000000
         return element
       }
-      
+
       function send(){
         var input = document.getElementById('text').value.split(" "),
             url = input.shift(),
             method = document.getElementById('method').value,
             json
-            
+
         if(input.length > 0){
           try{
             json = input.join(' ')
           } catch(e){ alert(e) }
         }
-        
+
         var span = document.createElement("span")
-        span.innerHTML = "&#62; "+ method +" "+ url        
+        span.innerHTML = "&#62; "+ method +" "+ url
         span = pushMessage(span)
-        
+
         $.ajax({
           type: method,
           url: "/_db"+url,
@@ -91,31 +63,37 @@
           dataType: "json",
           contentType: "application/json",
           complete: function(req, textStatus) {
-            console.log(req)
+//            console.log(req)
             var resp
             try{ resp = $.httpData(req, "json") }catch(e){ resp = req.responseText }
             var el = document.createElement("span")
             el.innerHTML = "&#60; "+ j(resp)
-            
+
             $(span).append(" ["+ req.status +"]")
             pushMessage(el)
           }
-          
+
         })
         document.getElementById('text').select()
       }
-    
-      var socket = new io.Socket(null, {rememberTransport: false, port: 8080});     
-        
-      socket.connect()
-      socket.addEvent('message', function(data){
-        if(data != "\n"){
-          var el = document.createElement("span")
-          el.innerHTML = "&#60; "+ data
-          pushMessage(el)
-        }
+
+      $(document).ready(function() {
+        var socket = new io.Socket(null, {rememberTransport: false, port: 8080});
+        socket.connect()
+
+        socket.addEvent('connect', function(){
+          document.getElementById('chat').innerHTML = ''
+        })
+
+        socket.addEvent('message', function(data){
+          if(data != "\n"){
+            var el = document.createElement("span")
+            el.innerHTML = "&#60; "+ data
+            pushMessage(el)
+          }
+        })
+        socket.send(0) // current revision
       })
-      socket.send(0) // current revision
     </script>
   </body>
 </html>

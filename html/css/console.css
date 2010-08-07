@@ -1,0 +1,85 @@
+a {
+  text-decoration: none;
+  color: inherit
+}
+
+a:hover {
+  text-decoration: underline
+}
+
+#console {
+  margin: 20px
+}
+
+#chat {
+  overflow: auto;
+  width: 100%;
+  border: 1px solid #eee;
+  height: 500px
+}
+
+#chat pre {
+  padding: 8px;
+  margin: 0;
+  white-space: nowrap
+}
+
+#chat pre i {
+  color: gray
+}
+
+#chat pre:nth-child(odd){
+  background-color: #F6F6F6;
+}
+
+#form {
+  background: #333;
+  padding: 5px 10px 5px 80px;
+  position: relative
+}
+
+#form input[type=text] {
+  width: 100%;
+  height: 30px;
+  background: #fff;
+  border: 1px solid #fff;
+  font-family: monospace;
+  font-size: 20px;
+  padding: 0
+}
+
+#form input[type=submit] {
+  position: absolute;
+  right: 15px;
+  top: 6px;
+  cursor: pointer;
+  background: #999;
+  border: none;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  text-shadow: 1px 1px 0 #000;
+  color: #fff;
+  width: 81px;
+  height: 30px
+}
+
+#form input[type=submit]:hover {
+  background: #A2A2A2;
+}
+
+#form input[type=submit]:active {
+  color: #000;
+  text-shadow: 1px 1px 0 #fff;
+}
+
+span.gray {
+  color: gray
+}
+
+#form select {
+  height: 32px;
+  left: 5px;
+  position: absolute;
+  top: 5px;
+  width: 70px;
+}

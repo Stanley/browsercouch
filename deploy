@@ -1,2 +1,2 @@
 #! /bin/sh
-node ../node.couchapp.js/lib/bin.js --sync --couch http://localhost:5984/browsercouch --design app.js
+node server.js
