@@ -36,7 +36,7 @@ specific language governing permissions and limitations under the License.
       var page = new $.futon.CouchDocumentPage();
 
       $.futon.navigation.ready(function() {
-        console.log(page.docId)
+//        console.log(page.docId)
         this.addDatabase(page.db.name);
         this.updateSelection(
           location.pathname.replace(/document\.html/, "database.html"),
@@ -72,7 +72,7 @@ specific language governing permissions and limitations under the License.
       <a href="index.html">Overview</a>
       <a class="dbname" href="#">?</a>
       <strong>?</strong>
-      <a class="raw" title="Raw document"></a>
+      <!--<a class="raw" title="Raw document"></a>-->
     </h1>
     <div id="content">
       <ul id="toolbar">

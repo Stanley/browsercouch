@@ -298,7 +298,7 @@
           $("#grouplevel, #reduce").hide();
           page.updateDocumentListing();
         }
-        page.populateLanguagesMenu();
+//        page.populateLanguagesMenu();
         if (this.isTempView) {
           $("#tempwarn").show();
         }

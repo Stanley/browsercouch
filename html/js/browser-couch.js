@@ -1207,15 +1207,17 @@ function LocalStorage() {
       offset: 0,                        // TODO offset and other options like limit, startkey etc.
       rows: keys.sort().map(function(key){
         var doc = json(storage[prefix + key])
-        return {
-          id: doc._id,
-          key: doc._id,
-          value: {
-            rev: doc._rev
-          },
-          doc: doc
+        if(!doc._deleted){
+          return {
+            id: doc._id,
+            key: doc._id,
+            value: {
+              rev: doc._rev
+            },
+            doc: doc
+          }
         }
-      })
+      }).filter(function(doc){return !!doc})
     })
   }
 

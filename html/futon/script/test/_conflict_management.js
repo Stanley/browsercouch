@@ -1,4 +1,5 @@
-//'BrowserCouch conflict management'
+// BrowserCouch conflict management
+// TODO: I'll get to this test as soon as replications will work properly
 
 couchTests._conflict_management = function(debug) {
 //  .before(function(){

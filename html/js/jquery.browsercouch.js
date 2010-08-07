@@ -41,8 +41,6 @@
     return user_doc;
   };
 
-  var uuidCache = [];
-
   $.extend($.couch, {
     urlPrefix: '',
     activeTasks: function(options) {
@@ -58,6 +56,7 @@
     },
 
     config: function(options, section, option, value) {
+//      return({})
       var req = {url: this.urlPrefix + "/_config/"};
       if (section) {
         req.url += encodeURIComponent(section) + "/";
@@ -222,30 +221,26 @@
           );
         },
         info: function(options) {
-          fake_ajax(
-            function(cb){
-              cb({
-                db_name: name,
-                doc_count: browsercouch.docCount(),
-                doc_del_count: 0,
-                update_seq: 0,
-                purge_seq: 0,
-                compact_running: false,
-                disk_size: 0,
-                instance_start_time: "1280597411120486",
-                disk_format_version: 0
-              })
-            },
-            options,
-            "Database information could not be retrieved"
-          );
+          // TODO
+          options.success({
+            db_name: name,
+            doc_count: browsercouch.docCount(),
+            doc_del_count: 0,
+            update_seq: 0,
+            purge_seq: 0,
+            compact_running: false,
+            disk_size: 0,
+            instance_start_time: "1280597411120486",
+            disk_format_version: 0
+          })            
         },
         allDocs: function(options) {
-          fake_ajax(
-            browsercouch.allDocs,
-            options,
-            "An error occurred retrieving a list of all documents"
-          );
+          var resp = browsercouch.allDocs(options)
+          if(!resp.error)
+            options.success(resp)
+          else
+            alert("An error occurred retrieving a list of all documents")
+
         },
         allDesignDocs: function(options) {
           this.allDocs($.extend({startkey:"_design", endkey:"_design0"}, options));
@@ -279,44 +274,45 @@
           }
         },
         openDoc: function(docId, options, ajaxOptions) {
-//          ajax({url: this.uri + encodeDocId(docId) + encodeOptions(options)},
-//            options,
-//            "The document could not be retrieved"
-//          );
-          fake_ajax(
-            function(cb){
-              browsercouch.get(docId, cb)
-            },
-            options,
-            "The document could not be retrieved"
-          )
+          var resp = browsercouch.open(docId)
+          if(resp)
+            options.success(resp)
+          else
+            alert("The document could not be retrieved")
+
         },
         saveDoc: function(doc, options) {
-          options = options || {};
-          if (doc._id === undefined) {
-            var method = "POST";
-            var uri = this.uri;
-          } else {
-            var method = "PUT";
-            var uri = this.uri + encodeDocId(doc._id);
-          }
-          $.ajax({
-            type: method, url: uri + encodeOptions(options),
-            contentType: "application/json",
-            dataType: "json", data: toJSON(doc),
-            complete: function(req) {
-              var resp = $.httpData(req, "json");
-              if (req.status == 201) {
-                doc._id = resp.id;
-                doc._rev = resp.rev;
-                if (options.success) options.success(resp);
-              } else if (options.error) {
-                options.error(req.status, resp.error, resp.reason);
-              } else {
-                alert("The document could not be saved: " + resp.reason);
-              }
-            }
-          });
+          var resp = browsercouch.save(doc, options)
+
+          doc._id = resp.id
+          doc._rev = resp.rev
+          if (options.success) options.success(resp)
+
+
+//          if (doc._id === undefined) {
+//            var method = "POST";
+//            var uri = this.uri;
+//          } else {
+//            var method = "PUT";
+//            var uri = this.uri + encodeDocId(doc._id);
+//          }
+//          $.ajax({
+//            type: method, url: uri + encodeOptions(options),
+//            contentType: "application/json",
+//            dataType: "json", data: toJSON(doc),
+//            complete: function(req) {
+//              var resp = $.httpData(req, "json");
+//              if (req.status == 201) {
+//                doc._id = resp.id;
+//                doc._rev = resp.rev;
+//                if (options.success) options.success(resp);
+//              } else if (options.error) {
+//                options.error(req.status, resp.error, resp.reason);
+//              } else {
+//                alert("The document could not be saved: " + resp.reason);
+//              }
+//            }
+//          });
         },
         bulkSave: function(docs, options) {
           $.extend(options, {successStatus: 201});
@@ -330,15 +326,12 @@
           );
         },
         removeDoc: function(doc, options) {
-          ajax({
-              type: "DELETE",
-              url: this.uri +
-                   encodeDocId(doc._id) +
-                   encodeOptions({rev: doc._rev})
-            },
-            options,
-            "The document could not be deleted"
-          );
+          var resp = browsercouch.deleteDoc(doc)
+          if(!resp.error)
+            options.success(resp)
+          else
+            alert("The document could not be deleted")
+
         },
         copyDoc: function(doc, options, ajaxOptions) {
           ajaxOptions = $.extend(ajaxOptions, {
@@ -431,17 +424,10 @@
     encodeDocId: encodeDocId, 
 
     info: function(options) {
-      fake_ajax(
-//        {url: this.urlPrefix + "/"},
-        function(cb){
-          cb({
-            browsercouch: "Welcome",
-            version: "0.0.1"
-          })
-        },
-        options,
-        "Server information could not be retrieved"
-      );
+      options.success({
+        browsercouch: "Welcome",
+        version: "0.0.1"
+      })
     },
 
     replicate: function(source, target, options) {
@@ -456,24 +442,19 @@
     },
 
     newUUID: function(cacheNum) {
-      if (cacheNum === undefined) {
-        cacheNum = 1;
-      }
-      if (!uuidCache.length) {
-        ajax({url: this.urlPrefix + "/_uuids", data: {count: cacheNum}, async: false}, {
-            success: function(resp) {
-              uuidCache = resp.uuids
-            }
-          },
-          "Failed to retrieve UUID batch."
-        );
-      }
-      return uuidCache.shift();
+      if (cacheNum === undefined)
+        cacheNum = 1
+
+      if (!BrowserCouch.uuids_cache.length)
+        BrowserCouch.newUuids(1, cacheNum)
+
+      return BrowserCouch.uuids_cache.shift()
     }
 
   });
 
   function ajax(obj, options, errorMessage, ajaxOptions) {
+    throw "NotImplementedError"
     options = $.extend({successStatus: 200}, options);
     errorMessage = errorMessage || "Unknown error";
 
@@ -490,33 +471,6 @@
         }
       }
     }, obj), ajaxOptions));
-  }
-
-  function fake_ajax(handler, options, errorMessage) {
-    options = $.extend({successStatus: 200}, options);
-    errorMessage = errorMessage || "Unknown error";
-
-//    funct(options, function(resp){
-//      console.log(resp)
-//      options.success(resp)
-//    })
-
-    handler(options.success)
-
-
-//    $.ajax($.extend($.extend({
-//      type: "GET", dataType: "json",
-//      complete: function(req) {
-//        var resp = $.httpData(req, "json");
-//        if (req.status == options.successStatus) {
-//          if (options.success) options.success(resp);
-//        } else if (options.error) {
-//          options.error(req.status, resp.error, resp.reason);
-//        } else {
-//          alert(errorMessage + ": " + resp.reason);
-//        }
-//      }
-//    }, obj), ajaxOptions));
   }
 
   // Convert a options object to an url query string.
